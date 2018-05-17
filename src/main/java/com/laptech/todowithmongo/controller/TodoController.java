@@ -43,4 +43,9 @@ public class TodoController {
   public TodoItem findById(@PathVariable("id") String id) {
     return repository.findById(id);
   }
+
+  @GetMapping("/search")
+  public List<TodoItem> search(@RequestParam("q") String q) {
+    return repository.search(q);
+  }
 }

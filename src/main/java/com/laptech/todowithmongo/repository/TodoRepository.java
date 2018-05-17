@@ -13,6 +13,8 @@ import org.springframework.data.mongodb.core.aggregation.Aggregation;
 import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.data.mongodb.core.query.TextCriteria;
+import org.springframework.data.mongodb.core.query.TextQuery;
 import org.springframework.stereotype.Repository;
 
 @Repository
@@ -23,6 +25,13 @@ public class TodoRepository {
 
   public List<TodoItem> findAll() {
     return mongoTemplate.findAll(TodoItem.class);
+  }
+
+
+  public List<TodoItem> search(String searchQuery){
+    TextCriteria textCriteria = TextCriteria.forDefaultLanguage().matchingPhrase(searchQuery);
+    Query query = TextQuery.query(textCriteria);
+    return mongoTemplate.find(query, TodoItem.class);
   }
 
   public void insertOne(TodoItem item) {
@@ -46,6 +55,7 @@ public class TodoRepository {
   }
 
   public boolean removeById(String id) {
+    System.out.println(1);
     return mongoTemplate.remove(Query.query(Criteria.where("_id").is(id))).getDeletedCount() == 1;
   }
 
