@@ -4,6 +4,7 @@ import com.laptech.todowithmongo.model.TodoItem;
 import com.laptech.todowithmongo.repository.TodoRepository;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -26,26 +27,36 @@ public class TodoController {
   }
 
   @GetMapping(params = {"skip", "limit"})
-  public List<TodoItem> findAllWithPagination(@RequestParam("skip") long skip, @RequestParam("limit") long limit) {
-    return repository.findAll(skip, limit);
+  public List<TodoItem> findAllWithPagination(@RequestParam("skip") int skip,
+      @RequestParam("limit") int limit) {
+    return repository.findAll(PageRequest.of(skip * limit, limit)).getContent();
   }
 
   @PutMapping
-  public void insertOne(@RequestBody TodoItem todoItem) {
-    repository.insertOne(todoItem);
+  public TodoItem insertOne(@RequestBody TodoItem todoItem) {
+    return repository.insert(todoItem);
   }
 
   @DeleteMapping("/{id}")
   public boolean removeById(@PathVariable("id") String id) {
-    return repository.removeById(id);
+    try {
+      repository.deleteById(id);
+      return true;
+    } catch (Exception e) {
+      return false;
+    }
   }
+
   @GetMapping("/{id}")
   public TodoItem findById(@PathVariable("id") String id) {
-    return repository.findById(id);
+    return repository.findById(id).orElseThrow(() -> new RuntimeException("Element not found"));
   }
 
   @GetMapping("/search")
-  public List<TodoItem> search(@RequestParam("q") String q) {
-    return repository.search(q);
+  public List<TodoItem> search(@RequestParam(value = "q", defaultValue = "") String q) {
+    if (q.isEmpty()) {
+      return repository.findAll();
+    }
+    return repository.search(q, TodoItem.class);
   }
 }
